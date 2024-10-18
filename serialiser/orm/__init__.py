@@ -1,9 +1,28 @@
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import dec
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 
-SqlAlchemyBase = dec.declarative_base()
+from sqlalchemy import Column, Text, String, ForeignKey
+from sqlalchemy_serializer import SerializerMixin
+
+SqlAlchemyBase = declarative_base()
+
+
+class User(SqlAlchemyBase, SerializerMixin):
+    __tablename__ = "users"
+    uid = Column(String, primary_key=True)
+    nickname = Column(String, unique=True)
+    pubkey = Column(Text, unique=True)
+
+
+class Post(SqlAlchemyBase, SerializerMixin):
+    __tablename__ = "posts"
+    uid = Column(String, primary_key=True)
+    author = Column(String, ForeignKey("users.uid"))
+    text = Column(Text)
+    signature = Column(Text)
+
 
 __factory = None
 
@@ -22,8 +41,6 @@ def orm_init(db_file):
     
     orm_engine = create_engine(conn_str, echo=False)
     __factory = sessionmaker(bind=orm_engine)
-    
-    from . import __all_models
     
     SqlAlchemyBase.metadata.create_all(orm_engine)
 

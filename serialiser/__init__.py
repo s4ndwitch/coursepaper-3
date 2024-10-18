@@ -1,29 +1,33 @@
 
-from user import User
-from post import Post
+from serialiser.user import User
+from serialiser.post import Post
 from hashlib import sha256
 
-import orm
+import serialiser.orm as orm
 
 class Serialiser:
 
-    _orm: Session
+    _orm: orm.Session
     
     def __init__(self, db_file:str = "db.sqlite") -> None:
 
-        global_init(db_file)
+        orm.orm_init(db_file)
 
-        self._orm = create_session()
+        self._orm = orm.create_session()
     
-    def createPost(self, author: str, text: str) -> Post:
+    def createPost(self, author: str, text: str, signature: str) -> Post:
 
-        uid = sha256(author + text)
+        uid = sha256((author + text).encode()).hexdigest()
 
-        post = Post(uid=uid,
-                author=author, text=text)
+        post = Post(
+            uid=uid,
+            author=author,
+            text=text,
+            signature=signature
+        )
 
         orm_post = orm.Post(
-            uid=uid, author=author, text=text
+            uid=uid, author=author, text=text, signature=signature
         )
         self._orm.add(orm_post)
         self._orm.commit()
@@ -32,7 +36,7 @@ class Serialiser:
 
     def createUser(self, nickname: str, pubkey: str) -> User:
 
-        uid = sha256(nickname + pubkey)
+        uid = sha256((nickname + pubkey).encode()).hexdigest()
 
         user = User(
             uid=uid, nickname=nickname,
@@ -57,7 +61,8 @@ class Serialiser:
         post = Post(
             uid=orm_post.uid,
             author=orm_post.author,
-            text=orm_post.tedt
+            text=orm_post.text,
+            signature=orm_post.signature
         )
 
         return post
@@ -70,7 +75,18 @@ class Serialiser:
             orm.Post.author == uid
         ).all()
 
-        return list(orm_posts)
+        return list(map(lambda x: x.uid, orm_posts))
     
     def getUser(self, uid: str) -> User:
-        pass
+        
+        orm_user = self._orm.query(orm.User).filter(
+            orm.User.uid == uid
+        ).first()
+        
+        user = User(
+            uid=orm_user.uid,
+            nickname=orm_user.nickname,
+            pubkey=orm_user.pubkey
+        )
+        
+        return user

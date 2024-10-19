@@ -2,6 +2,8 @@
 from rsa import PublicKey, verify
 
 from serialiser import Serialiser
+from serialiser.user import User
+from serialiser.post import Post
 
 class EqEngine:
     
@@ -34,6 +36,7 @@ class EqEngine:
                 if self._serialiser.getUser(element["uid"]) == None:
                     
                     self._serialiser.createUser(
+                        uid=element["uid"],
                         nickname=element["nickname"],
                         pubkey=element["pubkey"]
                     )
@@ -61,4 +64,24 @@ class EqEngine:
                         )
     
     def request(self, data: list) -> list:
-        pass
+        
+        for element in data:
+            
+            if element["type"] == "user":
+                
+                user: User = self._serialiser.getUser(element["uid"])
+                
+                if user is not None:
+                    element["pubkey"] = user.pubkey
+                    element["nickname"] = user.nickname
+            
+            if element["type"] == "post":
+                
+                post: Post = self._serialiser.getPost(element["uid"])
+                
+                if post is not None:
+                    element["text"] = post.text
+                    element["signature"] = post.signature
+                    element["author"] = post.author
+        
+        return data

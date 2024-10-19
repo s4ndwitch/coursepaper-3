@@ -15,9 +15,10 @@ class Serialiser:
 
         self._orm = orm.create_session()
     
-    def createPost(self, author: str, text: str, signature: str) -> Post:
+    def createPost(self, author: str, text: str, signature: str, uid: str = None) -> Post:
 
-        uid = sha256((author + text).encode()).hexdigest()
+        if uid == None:
+            uid = sha256((author + text).encode()).hexdigest()
 
         post = Post(
             uid=uid,
@@ -34,9 +35,10 @@ class Serialiser:
 
         return post
 
-    def createUser(self, nickname: str, pubkey: str) -> User:
+    def createUser(self, nickname: str, pubkey: str, uid: str = None) -> User:
 
-        uid = sha256((nickname + pubkey).encode()).hexdigest()
+        if uid == None:
+            uid = sha256((nickname + pubkey).encode()).hexdigest()
 
         user = User(
             uid=uid, nickname=nickname,
@@ -57,6 +59,9 @@ class Serialiser:
         orm_post = self._orm.query(orm.Post).filter(
             orm.Post.uid == uid
         ).first()
+        
+        if orm_post == None:
+            return None
 
         post = Post(
             uid=orm_post.uid,
@@ -82,6 +87,9 @@ class Serialiser:
         orm_user = self._orm.query(orm.User).filter(
             orm.User.uid == uid
         ).first()
+        
+        if orm_user == None:
+            return None
         
         user = User(
             uid=orm_user.uid,

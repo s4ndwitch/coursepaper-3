@@ -52,7 +52,23 @@ class Interface:
 		)
 
 	def writePost(self, text: str) -> None:
-		pass
+		
+		author = self._local_user.getUid()
+  
+		privkey = self._local_user.getPrivkey()
+		signature = rsa.sign(
+      			text.encode(), privkey, "SHA-256"
+        ).hex()
+  
+		self._engine.handleData(
+			[{
+				"type": "post",
+				"author": author,
+				"text": text,
+				"signature": signature,
+				"uid": None
+			}]
+		)
 
 	def getUser(self, uid: str) -> None:
 		pass

@@ -41,7 +41,7 @@ class LocalUser:
      
 		config = json.loads(open(self._config_file, "r").read())
 
-		return PublicKey.load_pkcs1(config["user"]["uid"])
+		return config["user"]["uid"]
 
 	def follow(self, uid: str) -> None:
      

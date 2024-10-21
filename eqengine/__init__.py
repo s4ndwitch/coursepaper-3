@@ -26,12 +26,14 @@ class EqEngine:
         self._peer.shutdown_flag = True
         self._peer_thread.join()
     
-    def _verify(self, author: str, text: str, signature: str, pubkey: str) -> bool:
+    def _verify(self, text: str, signature: str, pubkey: str) -> bool:
         
         pub_key: PublicKey = PublicKey.load_pkcs1(pubkey)
         
+        signature = bytes().fromhex(signature)
+        
         return verify(
-            message=(author + text),
+            message=text.encode(),
             signature=signature,
             pub_key=pub_key
         )
@@ -53,27 +55,37 @@ class EqEngine:
                         nickname=element["nickname"],
                         pubkey=element["pubkey"]
                     )
-            
-            elif element["type"] == "post":
+        
+        for element in data:
+            if element["type"] == "post":
+                
+                print(element.keys())
                 
                 if (set([
-                    "uid", "author", "text", "signature", "pubkey"
+                    "uid", "author", "text", "signature", "type"
                 ]) != set(element.keys())):
                     continue
                 
                 if self._serialiser.getPost(element["uid"]) == None:
+                    
+                    author = self._serialiser.getUser(element["author"])
+                    
+                    if author == None:
+                        continue
+                    
+                    pubkey = author.pubkey
+                    
                     if self._verify(
-                        author=element["author"],
                         text=element["text"],
                         signature=element["signature"],
-                        pubkey=element["pubkey"]
+                        pubkey=pubkey
                     ):
 
                         self._serialiser.createPost(
+                            uid=element["uid"],
                             author=element["author"],
                             text=element["text"],
-                            signature=element["signature"],
-                            pubkey=element["pubkey"]
+                            signature=element["signature"]
                         )
     
     def request(self, data: list) -> list:

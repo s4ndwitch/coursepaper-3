@@ -1,17 +1,30 @@
 
 from rsa import PublicKey, verify
+from threading import Thread
 
 from serialiser import Serialiser
 from serialiser.user import User
 from serialiser.post import Post
+from eqengine.peer import Peer
 
 class EqEngine:
     
     _serialiser: Serialiser
+    _peer: Peer
+    _peer_thread: Thread
     
     def __init__(self, db_file="db.sqlite") -> None:
         
         self._serialiser = Serialiser(db_file=db_file)
+
+        self._peer = Peer(self)
+        self._peer_thread = Thread(target=self._peer.run)
+        self._peer_thread.start()
+    
+    def shutdown(self) -> None:
+        
+        self._peer.shutdown_flag = True
+        self._peer_thread.join()
     
     def _verify(self, author: str, text: str, signature: str, pubkey: str) -> bool:
         

@@ -2,29 +2,54 @@
 import rsa
 from hashlib import sha256
 
-from localuser import LocalUser
-
-RSAKeyPair = tuple[rsa.PublicKey, rsa.PrivateKey]
+from interface.localuser import LocalUser
+from eqengine import EqEngine
 
 class Interface:
+	
+	_engine: EqEngine
+	_local_user: LocalUser
 
 	def __init__(self) -> None:
 		
-		self.local_user: LocalUser = LocalUser()
+		self._local_user = LocalUser()
+		self._engine = EqEngine()
+  
+	def shutdown(self) -> None:
+		self._engine.shutdown()
+  
+	def follow(self, uid: str) -> None:
+		self._local_user.follow(uid)
+  
+	def getFollows(self) -> list[str]:
+		return self._local_user.getFollows()
 
 	def createUser(self, nickname: str) -> None:
 		
 		pubkey: rsa.PublicKey
 		privkey: rsa.PrivateKey
 
-		pubkey, privkey = rsa.keygen(2048)
-		uid = sha256(pubkey + nickname)
-
-		self.local_user.setPrivkey(privkey)
-		self.local_user.setPubKey(pubkey)
-		self.local_user.setUid(uid)
+		pubkey, privkey = rsa.newkeys(2048)
   
-		# TODO add eqqengine acknowledge
+		pubkey_str: str = pubkey.save_pkcs1().decode()
+
+		uid = sha256(pubkey_str.encode() + nickname.encode()
+               ).hexdigest()
+
+		self._local_user.setUser(
+			privkey=privkey,
+			pubkey=pubkey,
+			uid=uid
+		)
+
+		self._engine.handleData(
+			[{
+				"type": "user",
+				"uid": uid,
+				"pubkey": pubkey_str,
+				"nickname": nickname
+			}]
+		)
 
 	def writePost(self, text: str) -> None:
 		pass
@@ -35,12 +60,6 @@ class Interface:
 	def getNews(self, uid: str) -> None:
 		pass
 
-	def like(self, uid: str) -> None:
-		pass
-
-	def follow(self, uid: str) -> None:
-		pass
-
 if __name__ == "__main__":
-    
-    from serialiser import Serialiser
+	
+	pass

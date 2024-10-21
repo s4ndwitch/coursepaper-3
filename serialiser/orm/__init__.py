@@ -12,7 +12,7 @@ SqlAlchemyBase = declarative_base()
 class User(SqlAlchemyBase, SerializerMixin):
     __tablename__ = "users"
     uid = Column(String, primary_key=True)
-    nickname = Column(String, unique=True)
+    nickname = Column(String)
     pubkey = Column(Text, unique=True)
 
 

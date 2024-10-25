@@ -37,6 +37,9 @@ class Interface:
 		else:
 			self._engine = EqEngine(uid=uid, address=address, port=port)
   
+	def hello(self, address: str, port: int):
+		self._engine.hello(address=address, port=port)
+  
 	def shutdown(self) -> None:
 		self._engine.shutdown()
   
@@ -85,8 +88,24 @@ class Interface:
 			}]
 		)
 
-	def getUser(self, uid: str) -> None:
-		pass
+	def getPosts(self, uid: str) -> list:
+		
+		local_posts = self._engine.request(
+			[{
+				"type": "user",
+				"uid": uid,
+				"posts": []
+			}]
+		)[0]["posts"]
+  
+		if len(local_posts) == 0:
+			return []
+		else:
+			print(local_posts)
+			local_posts = self._engine.request(
+				list(map(lambda x: {"uid": x, "type": "post", "text": None}, local_posts))
+			)
+			return local_posts
 
 	def getNews(self, uid: str) -> None:
 		pass

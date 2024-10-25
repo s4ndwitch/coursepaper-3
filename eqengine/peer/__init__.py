@@ -63,13 +63,13 @@ class Peer:
             
         client_socket.close()
 
-    def hello(self, host: str, post: int) -> None:
+    def hello(self, host: str, port: int) -> None:
         
         peers_data = json.loads(open(self._table_file, "r").read())
         
         try:
             sock = socket.socket()
-            sock.connect((host, post))
+            sock.connect((host, port))
             sock.sendall("\x01".encode("utf-8"))
             
             data = sock.recv(4096).decode("utf-8")

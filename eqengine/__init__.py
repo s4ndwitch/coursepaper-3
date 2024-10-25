@@ -21,6 +21,9 @@ class EqEngine:
         self._peer_thread = Thread(target=self._peer.run)
         self._peer_thread.start()
     
+    def hello(self, address: str, port: int):
+        self._peer.hello(address=address, port=port)
+
     def shutdown(self) -> None:
         
         self._peer.shutdown_flag = True
@@ -93,10 +96,12 @@ class EqEngine:
             if element["type"] == "user":
                 
                 user: User = self._serialiser.getUser(element["uid"])
+                posts: list = self._serialiser.getPosts(element["uid"])
                 
                 if user is not None:
                     element["pubkey"] = user.pubkey
                     element["nickname"] = user.nickname
+                    element["posts"] = posts
             
             if element["type"] == "post":
                 

@@ -8,4 +8,6 @@ print(interface.getFollows())
 
 interface.writePost("test")
 
+input()
+
 interface.shutdown()

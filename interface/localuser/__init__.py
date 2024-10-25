@@ -28,18 +28,27 @@ class LocalUser:
 	def getPrivkey(self) -> PrivateKey:
      
 		config = json.loads(open(self._config_file, "r").read())
+  
+		if "user" not in config.keys():
+			return None
 	 
 		return PrivateKey.load_pkcs1(config["user"]["privkey"])
 
 	def getPubkey(self) -> PublicKey:
      
 		config = json.loads(open(self._config_file, "r").read())
+  
+		if "user" not in config.keys():
+			return None
 
 		return PublicKey.load_pkcs1(config["user"]["pubkey"])
 
 	def getUid(self) -> str:
      
 		config = json.loads(open(self._config_file, "r").read())
+  
+		if "user" not in config.keys():
+			return None
 
 		return config["user"]["uid"]
 

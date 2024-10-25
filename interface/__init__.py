@@ -10,10 +10,32 @@ class Interface:
 	_engine: EqEngine
 	_local_user: LocalUser
 
-	def __init__(self) -> None:
+	def __init__(self, address: str, port: int = 8080, nickname: str = "") -> None:
 		
 		self._local_user = LocalUser()
-		self._engine = EqEngine()
+  
+		uid: str = self._local_user.getUid()
+  
+		if uid is None:
+			if nickname != "":
+				pubkey: str
+		
+				uid, pubkey = self._createUser(nickname=nickname)
+		
+				self._engine = EqEngine(uid=uid, address=address, port=port)
+		
+				self._engine.handleData(
+					[{
+						"type": "user",
+						"uid": uid,
+						"pubkey": pubkey,
+						"nickname": nickname
+					}]
+				)
+			else:
+				raise("Cannot create a user")
+		else:
+			self._engine = EqEngine(uid=uid, address=address, port=port)
   
 	def shutdown(self) -> None:
 		self._engine.shutdown()
@@ -24,7 +46,7 @@ class Interface:
 	def getFollows(self) -> list[str]:
 		return self._local_user.getFollows()
 
-	def createUser(self, nickname: str) -> None:
+	def _createUser(self, nickname: str) -> tuple[str, str]:
 		
 		pubkey: rsa.PublicKey
 		privkey: rsa.PrivateKey
@@ -42,14 +64,7 @@ class Interface:
 			uid=uid
 		)
 
-		self._engine.handleData(
-			[{
-				"type": "user",
-				"uid": uid,
-				"pubkey": pubkey_str,
-				"nickname": nickname
-			}]
-		)
+		return (uid, pubkey_str)
 
 	def writePost(self, text: str) -> None:
 		

@@ -13,11 +13,11 @@ class EqEngine:
     _peer: Peer
     _peer_thread: Thread
     
-    def __init__(self, db_file="db.sqlite") -> None:
+    def __init__(self, uid: str, address: str, port: int, db_file: str = "db.sqlite") -> None:
         
         self._serialiser = Serialiser(db_file=db_file)
 
-        self._peer = Peer(self)
+        self._peer = Peer(self, uid=uid, address=address, port=port)
         self._peer_thread = Thread(target=self._peer.run)
         self._peer_thread.start()
     
@@ -58,8 +58,6 @@ class EqEngine:
         
         for element in data:
             if element["type"] == "post":
-                
-                print(element.keys())
                 
                 if (set([
                     "uid", "author", "text", "signature", "type"

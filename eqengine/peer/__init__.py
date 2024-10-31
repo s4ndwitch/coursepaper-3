@@ -28,9 +28,37 @@ class Peer:
         
         self.shutdown_flag = True
 
+    def request(self, uid: str, peer_uid: str = None, request_type: str = "user") -> list:
+        
+        peers_data = json.loads(open(self._table_file, "r").read())
+        
+        if peer_uid == None:
+            peer_uid = uid
+        
+        if peer_uid not in peers_data.keys():
+            return
+        
+        sock = socket.socket()
+        
+        try:
+
+            sock.connect((peers_data[peer_uid]["address"], peers_data[peer_uid]["port"]))
+            sock.sendall("\x02".encode("utf-8"))
+            sock.sendall(json.dumps({"type": "request", "data": [{
+                "type": request_type,
+                "uid": uid
+            }]}).encode("utf-8"))
+            
+            result = json.loads(sock.recv(4096).decode("utf-8"))
+            self._engine.handleData(result)
+            
+            return result
+        except:
+            return []
+
     def handle_request(self, data: list) -> list:
 
-        processed_data = self._engine.request(data)
+        processed_data = self._engine.request(data, online=True)
         return processed_data
     
     def handle_data(self, data: list) -> None:
@@ -78,11 +106,11 @@ class Peer:
             
             data_dict = json.loads(data)
             for element in data_dict:
+
+                uid = element
+                element = data_dict[element]
                 
-                if set(element.keys()) != set(["uid", "address", "port"]):
-                    continue
-                
-                peers_data[element["uid"]] = {
+                peers_data[uid] = {
                     "address": element["address"],
                     "port": element["port"]
                 }
@@ -99,7 +127,7 @@ class Peer:
             
             readable, _, _ = select([self.socket], [], [], 1)
             if self.socket in readable:
-                client_socket, _ = self.socket.accept()
+                client_socket, addr = self.socket.accept()
                 self.handle_connection(client_socket)
         
         self.socket.close()

@@ -22,7 +22,7 @@ class EqEngine:
         self._peer_thread.start()
     
     def hello(self, address: str, port: int):
-        self._peer.hello(address=address, port=port)
+        self._peer.hello(host=address, port=port)
 
     def shutdown(self) -> None:
         
@@ -46,12 +46,14 @@ class EqEngine:
         for element in data:
             if element["type"] == "user":
                 
-                if (set([
-                    "uid", "nickname", "pubkey", "type"
-                ]) != set(element.keys())):
+                if ("uid" not in element.keys()):
                     continue
                 
                 if self._serialiser.getUser(element["uid"]) == None:
+                    
+                    if ("nickname" not in element.keys() or \
+                        "pubkey" not in element.keys()):
+                        continue
                     
                     self._serialiser.createUser(
                         uid=element["uid"],
@@ -89,11 +91,17 @@ class EqEngine:
                             signature=element["signature"]
                         )
     
-    def request(self, data: list) -> list:
+    def request(self, data: list, online=False) -> list:
         
         for element in data:
             
             if element["type"] == "user":
+                
+                if not online:
+                    result: list = self._peer.request(element["uid"])
+                    result = result[0]["posts"]
+                    for post in result:
+                        self._peer.request(post, peer_uid=element["uid"], request_type="post")
                 
                 user: User = self._serialiser.getUser(element["uid"])
                 posts: list = self._serialiser.getPosts(element["uid"])

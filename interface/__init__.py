@@ -90,25 +90,23 @@ class Interface:
 
 	def getPosts(self, uid: str) -> list:
 		
-		local_posts = self._engine.request(
+		posts = self._engine.request(
 			[{
 				"type": "user",
 				"uid": uid,
 				"posts": []
 			}]
-		)[0]["posts"]
+		)
   
-		if len(local_posts) == 0:
+		posts = posts[0]["posts"]
+  
+		if len(posts) == 0:
 			return []
 		else:
-			print(local_posts)
-			local_posts = self._engine.request(
-				list(map(lambda x: {"uid": x, "type": "post", "text": None}, local_posts))
+			posts = self._engine.request(
+				list(map(lambda x: {"uid": x, "type": "post", "text": None}, posts))
 			)
-			return local_posts
-
-	def getNews(self, uid: str) -> None:
-		pass
+			return posts
 
 if __name__ == "__main__":
 	

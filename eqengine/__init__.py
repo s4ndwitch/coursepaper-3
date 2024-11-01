@@ -13,11 +13,11 @@ class EqEngine:
     _peer: Peer
     _peer_thread: Thread
     
-    def __init__(self, uid: str, address: str, port: int, db_file: str = "db.sqlite") -> None:
+    def __init__(self, uid: str, address: str, port: int, db_file: str = "db.sqlite", peer_file: str = "peer.ini") -> None:
         
         self._serialiser = Serialiser(db_file=db_file)
 
-        self._peer = Peer(self, uid=uid, address=address, port=port)
+        self._peer = Peer(self, uid=uid, address=address, port=port, table_file=peer_file)
         self._peer_thread = Thread(target=self._peer.run)
         self._peer_thread.start()
     
@@ -41,7 +41,7 @@ class EqEngine:
             pub_key=pub_key
         )
     
-    def handleData(self, data: list) -> None:
+    def handleData(self, data: list, debug: bool = False) -> None:
         
         for element in data:
             if element["type"] == "user":
@@ -78,7 +78,7 @@ class EqEngine:
                     
                     pubkey = author.pubkey
                     
-                    if self._verify(
+                    if debug or self._verify(
                         text=element["text"],
                         signature=element["signature"],
                         pubkey=pubkey

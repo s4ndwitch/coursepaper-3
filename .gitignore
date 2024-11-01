@@ -2,3 +2,4 @@
 db.sqlite
 localuser.ini
 peers.ini
+*.pytest_cache*

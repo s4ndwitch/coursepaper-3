@@ -10,9 +10,10 @@ class Interface:
 	_engine: EqEngine
 	_local_user: LocalUser
 
-	def __init__(self, address: str, port: int = 8080, nickname: str = "") -> None:
+	def __init__(self, address: str, port: int = 8080, nickname: str = "",
+              db_file: str = "db.sqlite", peer_file: str = "peer.ini", local_file: str = "localuser.ini") -> None:
 		
-		self._local_user = LocalUser()
+		self._local_user = LocalUser(config_file=local_file)
   
 		uid: str = self._local_user.getUid()
   
@@ -22,7 +23,8 @@ class Interface:
 		
 				uid, pubkey = self._createUser(nickname=nickname)
 		
-				self._engine = EqEngine(uid=uid, address=address, port=port)
+				self._engine = EqEngine(uid=uid, address=address, port=port,
+                            db_file=db_file, peer_file=peer_file)
 		
 				self._engine.handleData(
 					[{
@@ -35,7 +37,8 @@ class Interface:
 			else:
 				raise("Cannot create a user")
 		else:
-			self._engine = EqEngine(uid=uid, address=address, port=port)
+			self._engine = EqEngine(uid=uid, address=address, port=port,
+                           db_file=db_file, peer_file=peer_file)
   
 	def hello(self, address: str, port: int):
 		self._engine.hello(address=address, port=port)

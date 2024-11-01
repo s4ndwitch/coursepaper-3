@@ -146,7 +146,7 @@ def test_eqengine_check_request():
     
     global eqengine_first
     
-    post_first: list = eqengine_first.request(
+    post_first: dict = eqengine_first.request(
         [{
             "type": "post",
             "uid": "post_uid_asdf"
@@ -158,7 +158,44 @@ def test_eqengine_check_request():
     assert post_first["text"] == "hello from asdf"
     assert post_first["signature"] == "no"
 
+from interface import Interface
 
+interface_first = Interface("127.0.0.1", 8082, nickname="asdf",
+                            db_file="asdf.sqlite", peer_file="asdf.ini", local_file="asdf_user.ini")
+interface_second = Interface("127.0.0.1", 8083, nickname="qwer",
+                             db_file="qwer.sqlite", peer_file="qwer.ini", local_file="qwer_user.ini")
+
+interface_first.hello("127.0.0.1", 8083)
+interface_second.hello("127.0.0.1", 8082)
+
+def test_interface_check_post_write():
+    
+    global interface_first
+    
+    interface_first.writePost("hello from asdf")
+    post: dict = interface_first.getPosts(interface_first._local_user.getUid())[0]
+    
+    assert post["text"] == "hello from asdf"
+    assert post["author"] == interface_first._local_user.getUid()
+
+def test_interface_check_follows():
+    
+    global interface_first
+    global interface_second
+    
+    interface_second.follow(interface_first._local_user.getUid())
+    
+    assert interface_second.getFollows()[0] == interface_first._local_user.getUid()
+
+def test_interface_check_internet_access():
+    
+    global interface_first
+    global interface_second
+    
+    post: dict = interface_second.getPosts(interface_first._local_user.getUid())[0]
+    
+    assert post["author"] == interface_first._local_user.getUid()
+    assert post["text"] == "hello from asdf"
 
 import pytest
 import os
@@ -173,15 +210,37 @@ def run_after_all_tests(request):
         eqengine_first.shutdown()
         eqengine_second.shutdown()
         
+        global interface_first
+        global interface_second
+        
+        interface_first.shutdown()
+        interface_second.shutdown()
+        
         if os.path.exists("test.sqlite"):
             os.remove("test.sqlite")
+
         if os.path.exists("test_first.sqlite"):
             os.remove("test_first.sqlite")
         if os.path.exists("test_second.sqlite"):
             os.remove("test_second.sqlite")
+
         if os.path.exists("peer_first.ini"):
             os.remove("peer_first.ini")
         if os.path.exists("peer_second.ini"):
             os.remove("peer_second.ini")
+            
+        if os.path.exists("asdf.sqlite"):
+            os.remove("asdf.sqlite")
+        if os.path.exists("asdf.ini"):
+            os.remove("asdf.ini")
+        if os.path.exists("asdf_user.ini"):
+            os.remove("asdf_user.ini")
+
+        if os.path.exists("qwer.sqlite"):
+            os.remove("qwer.sqlite")
+        if os.path.exists("qwer.ini"):
+            os.remove("qwer.ini")
+        if os.path.exists("qwer_user.ini"):
+            os.remove("qwer_user.ini")
     
     request.addfinalizer(teardown)
